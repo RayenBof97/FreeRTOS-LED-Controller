@@ -21,9 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdio.h>
-#include "FreeRTOS.h"
-#include "task.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,7 +31,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define DWT_CTRL			(*(volatile uint32_t*)0xE0001000)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -42,6 +39,9 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+RTC_HandleTypeDef hrtc;
+
+UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
@@ -50,15 +50,22 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_RTC_Init(void);
+static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-static void blueLedTask_Handler(void* parameters);
-static void redLedTask_Handler(void* parameters);
-static void yellowLedTask_Handler(void* parameters);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+TaskHandle_t handle_menuTask;
+TaskHandle_t handle_ledTask;
+TaskHandle_t handle_rtcTask;
+TaskHandle_t handle_printTask;
+TaskHandle_t handle_cmdHandlingTask;
 
+QueueHandle_t inputQueue;
+QueueHandle_t printQueue;
 /* USER CODE END 0 */
 
 /**
@@ -69,10 +76,6 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	TaskHandle_t blueLedTask_Handle;
-	TaskHandle_t redLedTask_Handle;
-	TaskHandle_t yellowLedTask_Handle;
-
 	BaseType_t status;
   /* USER CODE END 1 */
 
@@ -94,24 +97,31 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_RTC_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  //Enable DWT Control
-  DWT_CTRL |= (1<<0);
-
-  //Start Recording
-  SEGGER_SYSVIEW_Conf();
-
   //Creating Tasks
-   status = xTaskCreate(blueLedTask_Handler, "Blue-Led-Task", 200, NULL ,2, &blueLedTask_Handle);
+   status = xTaskCreate(menuTask_Handler, "Menu_Task", 250, NULL ,2, &handle_menuTask);
    configASSERT(status == pdPASS); //if something went wrong with the task creation we will be stuck in a infinite loop
 
-   status = xTaskCreate(redLedTask_Handler, "Red-Led-Task", 200, NULL ,2, &redLedTask_Handle);
+   status = xTaskCreate(ledTask_Handler, "Led-Task", 250, NULL ,2, &handle_ledTask);
    configASSERT(status == pdPASS);
 
-   status = xTaskCreate(yellowLedTask_Handler, "Yellow-Led-Task", 200, NULL ,2, &yellowLedTask_Handle);
+   status = xTaskCreate(RTCTask_Handler, "RTC-Task", 250, NULL ,2, &handle_rtcTask);
    configASSERT(status == pdPASS);
 
+   status = xTaskCreate(printTask_Handler, "Print-Task", 250, NULL ,2, &handle_printTask);
+   configASSERT(status == pdPASS);
+
+   status = xTaskCreate(cmdHandlingTask_Handler, "Command-Handling-Task", 250, NULL ,2, &handle_cmdHandlingTask);
+   configASSERT(status == pdPASS);
+
+   //Queues Creation
+   inputQueue = xQueueCreate( 10, sizeof( char ) );
+   configASSERT(inputQueue != NULL);
+   printQueue = xQueueCreate( 10, sizeof( size_t ) );
+   configASSERT(printQueue != NULL);
 
    //Start FreeRTOS Scheduler
    vTaskStartScheduler();
@@ -145,9 +155,10 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 16;
@@ -172,6 +183,74 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief RTC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RTC_Init(void)
+{
+
+  /* USER CODE BEGIN RTC_Init 0 */
+
+  /* USER CODE END RTC_Init 0 */
+
+  /* USER CODE BEGIN RTC_Init 1 */
+
+  /* USER CODE END RTC_Init 1 */
+
+  /** Initialize RTC Only
+  */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_12;
+  hrtc.Init.AsynchPrediv = 127;
+  hrtc.Init.SynchPrediv = 255;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RTC_Init 2 */
+
+  /* USER CODE END RTC_Init 2 */
+
+}
+
+/**
+  * @brief USART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
+
 }
 
 /**
@@ -203,14 +282,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : USART_TX_Pin USART_RX_Pin */
-  GPIO_InitStruct.Pin = USART_TX_Pin|USART_RX_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
   /*Configure GPIO pins : LD2_Pin PA9 */
   GPIO_InitStruct.Pin = LD2_Pin|GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -230,38 +301,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-static void blueLedTask_Handler(void* parameters)
-{
-	TickType_t xLastWakeTime;
-	xLastWakeTime = xTaskGetTickCount();
-
-	while(1){
-		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_9);
-		vTaskDelayUntil( &xLastWakeTime, pdMS_TO_TICKS(1000) );
-	}
-}
-
-static void redLedTask_Handler(void* parameters)
-{
-	TickType_t xLastWakeTime;
-	xLastWakeTime = xTaskGetTickCount();
-
-	while(1){
-		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_10);
-		vTaskDelayUntil( &xLastWakeTime, pdMS_TO_TICKS(800) );
-	}
-}
-
-static void yellowLedTask_Handler(void* parameters)
-{
-	TickType_t xLastWakeTime;
-	xLastWakeTime = xTaskGetTickCount();
-
-	while(1){
-		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_4);
-		vTaskDelayUntil( &xLastWakeTime, pdMS_TO_TICKS(400) );
-	}
-}
 
 
 /* USER CODE END 4 */
