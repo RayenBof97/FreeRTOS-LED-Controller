@@ -40,6 +40,22 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
+
+//Command structure
+typedef struct {
+	uint8_t payload[10];
+	uint32_t len;
+}command_t;
+
+//States of the program
+typedef enum{
+	MenuState = 0,
+	LedState,
+	RtcState,
+	RtcTimeConfigState,
+	RtcDateConfigState,
+	RtcReport,
+}state_t;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
