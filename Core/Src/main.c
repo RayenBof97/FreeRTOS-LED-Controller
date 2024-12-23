@@ -21,7 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include "FreeRTOS.h"
+#include "task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -31,7 +33,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define DWT_CTRL			(*(volatile uint32_t*)0xE0001000)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -49,7 +51,9 @@
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
-
+static void blueLedTask_Handler(void* parameters);
+static void redLedTask_Handler(void* parameters);
+static void yellowLedTask_Handler(void* parameters);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -65,7 +69,11 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+	TaskHandle_t blueLedTask_Handle;
+	TaskHandle_t redLedTask_Handle;
+	TaskHandle_t yellowLedTask_Handle;
 
+	BaseType_t status;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -88,6 +96,25 @@ int main(void)
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
 
+  //Enable DWT Control
+  DWT_CTRL |= (1<<0);
+
+  //Start Recording
+  SEGGER_SYSVIEW_Conf();
+
+  //Creating Tasks
+   status = xTaskCreate(blueLedTask_Handler, "Blue-Led-Task", 200, NULL ,2, &blueLedTask_Handle);
+   configASSERT(status == pdPASS); //if something went wrong with the task creation we will be stuck in a infinite loop
+
+   status = xTaskCreate(redLedTask_Handler, "Red-Led-Task", 200, NULL ,2, &redLedTask_Handle);
+   configASSERT(status == pdPASS);
+
+   status = xTaskCreate(yellowLedTask_Handler, "Yellow-Led-Task", 200, NULL ,2, &yellowLedTask_Handle);
+   configASSERT(status == pdPASS);
+
+
+   //Start FreeRTOS Scheduler
+   vTaskStartScheduler();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -203,6 +230,39 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+static void blueLedTask_Handler(void* parameters)
+{
+	TickType_t xLastWakeTime;
+	xLastWakeTime = xTaskGetTickCount();
+
+	while(1){
+		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_9);
+		vTaskDelayUntil( &xLastWakeTime, pdMS_TO_TICKS(1000) );
+	}
+}
+
+static void redLedTask_Handler(void* parameters)
+{
+	TickType_t xLastWakeTime;
+	xLastWakeTime = xTaskGetTickCount();
+
+	while(1){
+		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_10);
+		vTaskDelayUntil( &xLastWakeTime, pdMS_TO_TICKS(800) );
+	}
+}
+
+static void yellowLedTask_Handler(void* parameters)
+{
+	TickType_t xLastWakeTime;
+	xLastWakeTime = xTaskGetTickCount();
+
+	while(1){
+		HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_4);
+		vTaskDelayUntil( &xLastWakeTime, pdMS_TO_TICKS(400) );
+	}
+}
+
 
 /* USER CODE END 4 */
 
