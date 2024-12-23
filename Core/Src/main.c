@@ -58,6 +58,7 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
 TaskHandle_t handle_menuTask;
 TaskHandle_t handle_ledTask;
 TaskHandle_t handle_rtcTask;
@@ -66,6 +67,9 @@ TaskHandle_t handle_cmdHandlingTask;
 
 QueueHandle_t inputQueue;
 QueueHandle_t printQueue;
+
+//User data
+uint8_t user_data; //RX Buffer for UART
 /* USER CODE END 0 */
 
 /**
@@ -123,6 +127,8 @@ int main(void)
    printQueue = xQueueCreate( 10, sizeof( size_t ) );
    configASSERT(printQueue != NULL);
 
+   //Trigger the UART Reception
+   HAL_UART_Receive_IT(&huart2, &user_data, 1);
    //Start FreeRTOS Scheduler
    vTaskStartScheduler();
   /* USER CODE END 2 */
@@ -301,6 +307,31 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+
+
+	if(xQueueIsQueueFullFromISR(inputQueue) != pdTRUE)
+	{
+		xQueueSendFromISR(inputQueue, (void*)&user_data, NULL);
+	}else{
+		/*Queue is full */
+
+		if(user_data == '\n')
+		{
+			uint8_t dummy ;
+			xQueueReceiveFromISR(inputQueue,(void*)&dummy,NULL);
+			xQueueSendFromISR(inputQueue,(void*)&user_data,NULL);
+		}
+	}
+	if(user_data == '\n'){
+		xTaskNotifyFromISR(handle_cmdHandlingTask,0,eNoAction,NULL);
+
+	}
+
+	//Enable UART Reception once again
+	HAL_UART_Receive_IT(&huart2, (uint8_t*)&user_data, 1);
+}
 
 
 /* USER CODE END 4 */

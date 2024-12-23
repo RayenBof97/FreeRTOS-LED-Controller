@@ -16,6 +16,9 @@
  * @param a pointer to a parameter if needed
  * @return void
  */
+
+#include "main.h"
+
 void menuTask_Handler(void* parameters) {
 	while(1){
 
@@ -81,7 +84,7 @@ void printTask_Handler(void* parameters){
  * @return void
  */
 void cmdHandlingTask_Handler(void* parameters){
-	while(1){
 
-	}
 }
+
+
