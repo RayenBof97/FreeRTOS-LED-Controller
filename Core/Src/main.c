@@ -70,6 +70,9 @@ QueueHandle_t printQueue;
 
 //User data
 uint8_t user_data; //RX Buffer for UART
+
+//State Variable
+state_t curr_state = MenuState;
 /* USER CODE END 0 */
 
 /**
@@ -309,29 +312,32 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+/*
+ * Once the data is received , this Callback function will be excuted
+ * Here we are going to process the received data (a single byte) when we have an UART IT
+ */
 
-
-	if(xQueueIsQueueFullFromISR(inputQueue) != pdTRUE)
+	if(xQueueIsQueueFullFromISR(inputQueue) != pdTRUE) //If the Q is not full
 	{
-		xQueueSendFromISR(inputQueue, (void*)&user_data, NULL);
+		xQueueSendFromISR(inputQueue, &user_data, NULL); //we will enqueue the received byte
 	}else{
 		/*Queue is full */
 
-		if(user_data == '\n')
+		if(user_data == '\n') //If the received byte is \n character
 		{
 			uint8_t dummy ;
-			xQueueReceiveFromISR(inputQueue,(void*)&dummy,NULL);
-			xQueueSendFromISR(inputQueue,(void*)&user_data,NULL);
+			xQueueReceiveFromISR(inputQueue,&dummy,NULL); //We will leave space by deleting a character
+			xQueueSendFromISR(inputQueue,&user_data,NULL); // and we will enqueue the \n character
 		}
 	}
 	if(user_data == '\n'){
-		xTaskNotifyFromISR(handle_cmdHandlingTask,0,eNoAction,NULL);
-
+		xTaskNotifyFromISR(handle_cmdHandlingTask,0,eNoAction,NULL); //Whenever we receive \n character we to notify the Command Handling Task
 	}
 
 	//Enable UART Reception once again
-	HAL_UART_Receive_IT(&huart2, (uint8_t*)&user_data, 1);
+	HAL_UART_Receive_IT(&huart2,&user_data, 1); //Setting our UART to receive data through IT
 }
+
 
 
 /* USER CODE END 4 */
