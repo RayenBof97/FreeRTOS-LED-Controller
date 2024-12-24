@@ -53,7 +53,7 @@ The application consists of **five FreeRTOS tasks**, each serving a specific pur
 - Processes input data stored in an **Input Data Queue**.
 - Detects the newline character (`\n`) to identify complete commands and executes the corresponding task.
 
-![[images/image1.png]]
+![Tasks](images/image1.png)!
 
 ---
 
@@ -70,12 +70,12 @@ The application consists of **five FreeRTOS tasks**, each serving a specific pur
 ## How does it works ? 
 * The **Menu Task** generates the menu and enqueues it into the **Print Queue**, from which the **Print Task** dequeues and transmits the content to the user's terminal via UART. 
 
-![[images/image2.png]]
+![Print Menu](images/image2.png)
 
 
 * Users interact by entering commands through the terminal, which are received by the UART peripheral and handled by the **UART ISR**. The ISR enqueues the input data into the **Input Data Queue** and notifies the **Command Handling Task** upon detecting a complete input (e.g., via newline). The Command Handling Task processes the input, formats it into commands, and notifies relevant tasks, such as the LED Task for controlling LED effects or the RTC Task for managing date and time settings
 
-![[images/image3.png]]
+![Command Handling](images/image3.png)
 
 It's a very simple project to start your journey in the FreeRTOS world ! 
 
