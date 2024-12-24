@@ -32,9 +32,11 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include <string.h>
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -86,6 +88,9 @@ extern void ledTask_Handler(void* parameters);
 extern void RTCTask_Handler(void* parameters);
 extern void printTask_Handler(void* parameters);
 extern void cmdHandlingTask_Handler(void* parameters);
+
+extern void led_effect_stop(void);
+extern void led_effect(int option);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

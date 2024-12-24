@@ -23,12 +23,56 @@
 void process_cmd(command_t *cmd);
 int extract_cmd(command_t *cmd);
 
+//Constants
+const char* msg_invalid ="Invalid Choice, Try again";
 
 void menuTask_Handler(void* parameters) {
-	while(1){
 
+	uint32_t cmd_addr; //This variable will receive the address of the command as (uint32_t)
+	command_t *cmd; //This is a pointer to command_t variable which will store the pointer to our command
+
+	int option;
+
+	const char* msg_menu = "\n========================\n"
+								"|         Menu         |\n"
+								"========================\n"
+									"LED effect    ----> 0\n"
+									"Date and time ----> 1\n"
+									"Exit          ----> 2\n"
+									"Enter your choice here : ";
+
+	while(1){
+		xQueueSend(printQueue,&msg_menu,portMAX_DELAY); //Here the queue will actually store msg_menu which is a pointer to the string
+		xTaskNotifyWait(0,0,&cmd_addr,portMAX_DELAY);
+		cmd = (command_t*)cmd_addr;
+
+		if (cmd->len == 1){
+			option = cmd->payload[0] - 48 ; //Converting ASCII to numbers
+			switch(option) //Depending on the value we are gonna also notify the corresponding task
+			{
+			case 0:
+				curr_state = LedState;
+				xTaskNotify(handle_ledTask,0,eNoAction);
+				break;
+			case 1:
+				curr_state = RtcState;
+				xTaskNotify(handle_rtcTask,0,eNoAction);
+				break;
+			case 2: //Exit
+				break;
+			default:
+				xQueueSend(printQueue,&msg_invalid,portMAX_DELAY); //Invalid Char
+				continue;
+			}
+		}else{
+			//Invalid Choice (More than 1 char)
+			xQueueSend(printQueue,&msg_invalid,portMAX_DELAY);
+		}
+		xTaskNotifyWait(0,0,NULL,portMAX_DELAY);
 	}
 }
+
+
 
 
 /**
@@ -42,9 +86,51 @@ void menuTask_Handler(void* parameters) {
  */
 void ledTask_Handler(void* parameters){
 	while(1){
+			uint32_t cmd_addr;
+			command_t *cmd;
+			const char* msg_led = "========================\n"
+								  "|      LED Effect     |\n"
+								  "========================\n"
+								  "(none,e1,e2,e3,e4)\n"
+								  "Enter your choice here : ";
 
+			while(1){
+				xTaskNotifyWait(0,0,NULL,portMAX_DELAY); //Whenever the Task run , it blocks and wait for notifications
+
+				//Print the Menu
+				xQueueSend(printQueue,&msg_led,portMAX_DELAY);
+
+				// wait for LED command
+				xTaskNotifyWait(0,0,&cmd_addr,portMAX_DELAY);
+				cmd = (command_t*)cmd_addr;
+
+				if(cmd->len <= 4)
+				{
+					if(! strcmp((char*)cmd->payload,"none"))
+						led_effect_stop();
+					else if (! strcmp((char*)cmd->payload,"e1"))
+						led_effect(1);
+					else if (! strcmp((char*)cmd->payload,"e2"))
+						led_effect(2);
+					else if (! strcmp((char*)cmd->payload,"e3"))
+						led_effect(3);
+					else if (! strcmp((char*)cmd->payload,"e4"))
+						led_effect(4);
+					else
+						xQueueSend(printQueue,&msg_invalid,portMAX_DELAY); //Invalid Option
+				}else
+					xQueueSend(printQueue,&msg_invalid,portMAX_DELAY); //Invalid Option
+
+				//update state variable
+				curr_state = MenuState;
+
+				// Notify menu task
+				xTaskNotify(handle_menuTask,0,eNoAction);
+
+			}
 	}
 }
+
 
 
 /**
