@@ -60,7 +60,16 @@ typedef enum{
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
+extern TaskHandle_t handle_menuTask;
+extern TaskHandle_t handle_ledTask;
+extern TaskHandle_t handle_rtcTask;
+extern TaskHandle_t handle_printTask;
+extern TaskHandle_t handle_cmdHandlingTask;
 
+extern QueueHandle_t inputQueue;
+extern QueueHandle_t printQueue;
+
+extern state_t curr_state;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -96,7 +105,7 @@ extern void cmdHandlingTask_Handler(void* parameters);
 #define SWO_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-
+#define MAX_PAYLOAD_SIZE 10
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
