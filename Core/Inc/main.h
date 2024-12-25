@@ -36,6 +36,7 @@ extern "C" {
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "timers.h"
 
 /* USER CODE END Includes */
 
@@ -62,6 +63,9 @@ typedef enum{
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
+extern RTC_HandleTypeDef hrtc;
+extern UART_HandleTypeDef huart2;
+
 extern TaskHandle_t handle_menuTask;
 extern TaskHandle_t handle_ledTask;
 extern TaskHandle_t handle_rtcTask;
@@ -70,6 +74,8 @@ extern TaskHandle_t handle_cmdHandlingTask;
 
 extern QueueHandle_t inputQueue;
 extern QueueHandle_t printQueue;
+
+extern TimerHandle_t handle_led_timers[4];
 
 extern state_t curr_state;
 /* USER CODE END EC */
@@ -83,14 +89,19 @@ extern state_t curr_state;
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-extern void menuTask_Handler(void* parameters);
-extern void ledTask_Handler(void* parameters);
-extern void RTCTask_Handler(void* parameters);
-extern void printTask_Handler(void* parameters);
-extern void cmdHandlingTask_Handler(void* parameters);
+void menuTask_Handler(void* parameters);
+void ledTask_Handler(void* parameters);
+void RTCTask_Handler(void* parameters);
+void printTask_Handler(void* parameters);
+void cmdHandlingTask_Handler(void* parameters);
+void led_effect_callback(TimerHandle_t xTimer);
 
-extern void led_effect_stop(void);
-extern void led_effect(int option);
+void led_effect_stop(void);
+void led_effect(int option);
+void led_effect1(void);
+void led_effect2(void);
+void led_effect3(void);
+void led_effect4(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

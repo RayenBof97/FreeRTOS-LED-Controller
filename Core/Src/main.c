@@ -68,6 +68,8 @@ TaskHandle_t handle_cmdHandlingTask;
 QueueHandle_t inputQueue;
 QueueHandle_t printQueue;
 
+TimerHandle_t handle_led_timers[4];
+
 //User data
 uint8_t user_data; //RX Buffer for UART
 
@@ -129,6 +131,10 @@ int main(void)
    configASSERT(inputQueue != NULL);
    printQueue = xQueueCreate( 10, sizeof( size_t ) );
    configASSERT(printQueue != NULL);
+
+   //Create Timers for each LED effect (We have 4 Leds effect so we are creating 4 Timers , they all use the same callback function)
+   for(int i = 0; i<4 ; i++)
+	   handle_led_timers[i] = xTimerCreate("led_timer",pdMS_TO_TICKS(500),pdTRUE,(void*)(i+1),led_effect_callback);
 
    //Trigger the UART Reception
    HAL_UART_Receive_IT(&huart2, &user_data, 1);
@@ -310,6 +316,36 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+/*
+ * The Timers callback function it will be called when the timer is expired ! it will get the ID and depends on the ID will execute it's effect
+ */
+void led_effect_callback(TimerHandle_t xTimer)
+{
+	uint32_t id;
+
+	 configASSERT( xTimer ); //Check if the xTimer is NULL
+
+	 id = ( uint32_t ) pvTimerGetTimerID( xTimer );
+
+	 switch(id)
+	 {
+	 case 1:
+		 led_effect1();
+		 break;
+	 case 2:
+		 led_effect2();
+		 break;
+	 case 3:
+		 led_effect3();
+		 break;
+	 case 4:
+		 led_effect4();
+	 }
+}
+
+
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 /*
