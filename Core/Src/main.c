@@ -69,6 +69,7 @@ QueueHandle_t inputQueue;
 QueueHandle_t printQueue;
 
 TimerHandle_t handle_led_timers[4];
+TimerHandle_t rtc_timer;
 
 //User data
 uint8_t user_data; //RX Buffer for UART
@@ -135,6 +136,8 @@ int main(void)
    //Create Timers for each LED effect (We have 4 Leds effect so we are creating 4 Timers , they all use the same callback function)
    for(int i = 0; i<4 ; i++)
 	   handle_led_timers[i] = xTimerCreate("led_timer",pdMS_TO_TICKS(100),pdTRUE,(void*)(i+1),led_effect_callback);
+
+   rtc_timer = xTimerCreate ("rtc_report_timer",pdMS_TO_TICKS(1000),pdTRUE,NULL,rtc_report_callback);
 
    //Trigger the UART Reception
    HAL_UART_Receive_IT(&huart2, &user_data, 1);
@@ -342,6 +345,12 @@ void led_effect_callback(TimerHandle_t xTimer)
 	 case 4:
 		 led_effect4();
 	 }
+}
+
+void rtc_report_callback( TimerHandle_t xTimer )
+{
+	 show_time_date_itm();
+
 }
 
 

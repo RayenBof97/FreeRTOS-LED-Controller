@@ -76,6 +76,7 @@ extern QueueHandle_t inputQueue;
 extern QueueHandle_t printQueue;
 
 extern TimerHandle_t handle_led_timers[4];
+extern TimerHandle_t rtc_timer;
 
 extern state_t curr_state;
 /* USER CODE END EC */
@@ -95,6 +96,7 @@ void RTCTask_Handler(void* parameters);
 void printTask_Handler(void* parameters);
 void cmdHandlingTask_Handler(void* parameters);
 void led_effect_callback(TimerHandle_t xTimer);
+void rtc_report_callback(TimerHandle_t xTimer);
 
 void led_effect_stop(void);
 void led_effect(int option);
@@ -102,6 +104,12 @@ void led_effect1(void);
 void led_effect2(void);
 void led_effect3(void);
 void led_effect4(void);
+
+void show_time_date_itm(void);
+void show_time_date(void);
+void rtc_configure_time(RTC_TimeTypeDef *time);
+void rtc_configure_date(RTC_DateTypeDef *date);
+int validate_rtc_information(RTC_TimeTypeDef *time , RTC_DateTypeDef *date);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
