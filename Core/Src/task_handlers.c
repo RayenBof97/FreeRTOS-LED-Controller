@@ -160,8 +160,10 @@ void RTCTask_Handler(void* parameters){
  * @return void
  */
 void printTask_Handler(void* parameters){
+	uint32_t *msg;
 	while(1){
-
+		xQueueReceive(printQueue,&msg, portMAX_DELAY);
+		HAL_UART_Transmit(&huart2,(uint8_t*)msg, strlen((char*)msg), HAL_MAX_DELAY);
 	}
 }
 
