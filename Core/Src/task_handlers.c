@@ -67,6 +67,7 @@ void menuTask_Handler(void* parameters) {
 		}else{
 			//Invalid Choice (More than 1 char)
 			xQueueSend(printQueue,&msg_invalid,portMAX_DELAY);
+			continue;
 		}
 		xTaskNotifyWait(0,0,NULL,portMAX_DELAY);
 	}

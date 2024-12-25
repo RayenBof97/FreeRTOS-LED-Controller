@@ -134,7 +134,7 @@ int main(void)
 
    //Create Timers for each LED effect (We have 4 Leds effect so we are creating 4 Timers , they all use the same callback function)
    for(int i = 0; i<4 ; i++)
-	   handle_led_timers[i] = xTimerCreate("led_timer",pdMS_TO_TICKS(500),pdTRUE,(void*)(i+1),led_effect_callback);
+	   handle_led_timers[i] = xTimerCreate("led_timer",pdMS_TO_TICKS(100),pdTRUE,(void*)(i+1),led_effect_callback);
 
    //Trigger the UART Reception
    HAL_UART_Receive_IT(&huart2, &user_data, 1);
@@ -305,7 +305,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PB10 PB4 */
-  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_4;
+  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_9|GPIO_PIN_8;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
