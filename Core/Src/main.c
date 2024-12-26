@@ -137,7 +137,7 @@ int main(void)
    for(int i = 0; i<4 ; i++)
 	   handle_led_timers[i] = xTimerCreate("led_timer",pdMS_TO_TICKS(100),pdTRUE,(void*)(i+1),led_effect_callback);
 
-   rtc_timer = xTimerCreate ("rtc_report_timer",pdMS_TO_TICKS(1000),pdTRUE,NULL,rtc_report_callback);
+   rtc_timer = xTimerCreate ("rtc_report_timer",pdMS_TO_TICKS(1000),pdTRUE,NULL,rtc_report_callback);   // We are using this Timer to display the time every second on ITM
 
    //Trigger the UART Reception
    HAL_UART_Receive_IT(&huart2, &user_data, 1);
@@ -347,6 +347,9 @@ void led_effect_callback(TimerHandle_t xTimer)
 	 }
 }
 
+/*
+ * This is callback function for the RTC timer , it will show the time and date on the ITM (You have to enable it)
+ */
 void rtc_report_callback( TimerHandle_t xTimer )
 {
 	 show_time_date_itm();
