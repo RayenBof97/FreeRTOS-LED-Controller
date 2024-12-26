@@ -47,7 +47,7 @@ void show_time_date(void)
 	format = (rtc_time.TimeFormat == RTC_HOURFORMAT12_AM) ? "AM" : "PM";   	//We are checking if we have an AM or PM time
 
 	/* Display time Format : hh:mm:ss [AM/PM] */
-	sprintf((char*)showtime,"%s:\t%02d:%02d:%02d [%s]","\nCurrent Time&Date",rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds,format);
+	sprintf((char*)showtime,"%s:\t%02d:%02d:%02d [%s]","\n Time&Date",rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds,format);
 	xQueueSend(printQueue,&time,portMAX_DELAY);
 
 	/* Display date Format : date-month-year */
