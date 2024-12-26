@@ -80,6 +80,7 @@ The application consists of **five FreeRTOS tasks**, each serving a specific pur
 It's a very simple project to start your journey in the FreeRTOS world ! 
 
 
+Please if you want to add any feature to the project , Feel free to collaborate ! 
 This project is based on the course:  
 **[Mastering RTOS: Hands-on FreeRTOS and STM32Fx with Debugging](https://www.udemy.com/course/mastering-rtos-hands-on-with-freertos-arduino-and-stm32fx/?srsltid=AfmBOoqyL0AUMeJ_xK0xDSwyz2xb8wy9dr2umhWYIylfvCSNt5FaN6Tf&couponCode=LETSLEARNNOW)**  
 by **Kiran Nayak** on Udemy.
